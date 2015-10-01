@@ -11,10 +11,29 @@ from flask import (
 from werkzeug import check_password_hash, generate_password_hash
 
 from app import db
-from app.authentication.forms import LoginForm
+from app.authentication.forms import LoginForm, SignupForm
 from app.authentication.models import User
 
 mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
+
+@mod_auth.route('/signup/', methods=['GET', 'POST'])
+def signup():
+
+    form = SignupForm()
+    
+    if request.method == 'POST':
+        if form.validate() == False:
+            return render_template("authentication/signup.html", form=form)
+        else:
+            new_user = User(form.username.data, form.email.data, form.password.data)
+            db.session.add(new_user)
+            db.session.commit()
+
+            session['email'] = new_user.email
+            return "Not found"
+        
+    elif request.method == 'GET':
+        return render_template("authentication/signup.html", form=form)
 
 
 @mod_auth.route('/signin/', methods=['GET', 'POST'])

@@ -1,4 +1,5 @@
 from app import db
+from werkzeug import generate_password_hash, check_password_hash
 
 
 class Base(db.Model):
@@ -23,11 +24,17 @@ class User(Base):
     role = db.Column(db.SmallInteger, nullable=False)
     status = db.Column(db.SmallInteger, nullable=False)
 
-    def __init__(self, name, email, password):
+    def __init__(self, username, email, password):
 
-        self.name = name
+        self.username = username
         self.email = email
         self.password = password
+
+    def set_password(self, password):
+        self.pwdhash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.pwdhash, password)
 
     def __repr__(self):
         return '<User %r>' % (self.name)
