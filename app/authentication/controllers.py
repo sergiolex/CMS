@@ -16,10 +16,26 @@ from app.authentication.models import User
 
 mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
 
+@mod_auth.route('/profile')
+def profile():
+
+    if 'email' not in session:
+        return redirect(url_for('signin'))
+
+    user = User.query.filter_by(email = session['email']).first()
+
+    if user is None:
+        return redirect(url_for('signin'))
+    else:
+        return render_template('authentication/profile.html')
+
 @mod_auth.route('/signup/', methods=['GET', 'POST'])
 def signup():
 
     form = SignupForm()
+
+    if 'email' is session:
+        return redirect(url_for('profile'))
     
     if request.method == 'POST':
         if form.validate() == False:

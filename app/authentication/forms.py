@@ -23,7 +23,6 @@ class SignupForm(Form):
         user = User.query.filter_by(email = self.email.data.lower()).first()
         if user:
             self.email.errors.append("That email is already taken.")
-            return False
         else:
             return True
 
