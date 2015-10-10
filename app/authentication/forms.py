@@ -1,8 +1,20 @@
 from flask.ext.wtf import Form # , RecaptchaField
 from wtforms import TextField, PasswordField, SubmitField # BooleanField
+from wtforms import TextAreaField, HiddenField
 from wtforms.validators import Required, Email, EqualTo
 from models import db, User
 
+strip_filter = lambda x: x.strip() if x else None
+
+class ArticleCreateForm(Form):
+    title     = TextField('Title', [Required("Please enter a title")],
+                        filters=[strip_filter])
+    body      = TextAreaField('Body',[Required("Please enter a body")],
+                        filters=[strip_filter])
+    user_name = HiddenField()
+
+class ArticleUpdateForm(Form):
+    id = HiddenField()
 
 class SignupForm(Form):
     username = TextField('Username', 

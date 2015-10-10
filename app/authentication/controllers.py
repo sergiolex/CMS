@@ -11,8 +11,8 @@ from flask import (
 from werkzeug import check_password_hash, generate_password_hash
 
 from app import db
-from app.authentication.forms import LoginForm, SignupForm
-from app.authentication.models import User
+from app.authentication.forms import LoginForm, SignupForm, ArticleCreateForm
+from app.authentication.models import User, Article
 
 mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -27,7 +27,23 @@ def profile():
     if user is None:
         return redirect(url_for('signin'))
     else:
-        return render_template('authentication/profile.html')
+        return render_template('user/profile.html')
+
+@mod_auth.route('/create', methods=['GET', 'POST'])
+def article_create():
+    if 'email' not in session:
+        return redirect(url_for('sigin'))
+    user     = User.query.filter_by(email=session['email']).first()
+    username = user.username
+    article  = Article()
+    form     = ArticleCreateForm()
+    form.user_name.data = user.username
+    if form.validate_on_submit():
+        form.populate_obj(article)
+        db.session.add(article)
+        db.session.commit()
+        return redirect(url_for('index'))
+    return render_template('user/create.html', form=form, user=user, username=username)
 
 @mod_auth.route('/signup/', methods=['GET', 'POST'])
 def signup():
@@ -46,7 +62,7 @@ def signup():
             db.session.commit()
 
             session['email'] = new_user.email
-            return "Not found"
+            return redirect(url_for('profile'))
         
     elif request.method == 'GET':
         return render_template("authentication/signup.html", form=form)

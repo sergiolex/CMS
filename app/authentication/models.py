@@ -1,5 +1,9 @@
 from app import db
 from werkzeug import generate_password_hash, check_password_hash
+import datetime
+
+from webhelpers.date import time_ago_in_words
+from webhelpers.text import urlify
 
 class User(db.Model):
 
@@ -27,3 +31,34 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.pwdhash, password)
+
+class Article(db.Model):
+    __tablename__ = 'articles'
+    id        = db.Column('id', db.Integer, primary_key=True, autoincrement='ignore_fk')
+    title     = db.Column(db.String(100))
+    body      = db.Column(db.Text)
+    created   = db.Column(db.DateTime, default=datetime.datetime.now)
+    user_name = db.Column(db.String(100), db.ForeignKey(User.username, onupdate="CASCADE",
+                        ondelete="CASCADE"))
+    user      = db.relationship(User)
+
+    @classmethod
+    def all(cls):
+        return Article.query_order_by(desc(Article.created)).all()
+
+    @classmethod
+    def find_by_id(cls, id):
+        return Article.query.filter(Article.id == id).first()
+
+    @classmethod
+    def find_by_author(cls, name):
+        return Article.query.filter(Article.user_name == name).all()
+
+    @property
+    def slug(self):
+        return urlify(self.title)
+
+    @property
+    def created_in_words(self):
+        return time_ago_in_words(self.created)
+
