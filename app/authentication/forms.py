@@ -3,6 +3,7 @@ from wtforms import TextField, PasswordField, SubmitField # BooleanField
 from wtforms.validators import Required, Email, EqualTo
 from models import db, User
 
+
 class SignupForm(Form):
     username = TextField('Username', 
             [Required(message='Please enter an username.')])
