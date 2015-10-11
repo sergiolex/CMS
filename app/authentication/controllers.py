@@ -16,18 +16,16 @@ from app.authentication.models import User, Article
 
 mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
 
-@mod_auth.route('/profile')
-def profile():
-
+@mod_auth.route('/profile/<username>')
+def profile(username):
     if 'email' not in session:
-        return redirect(url_for('signin'))
-
-    user = User.query.filter_by(email = session['email']).first()
-
-    if user is None:
-        return redirect(url_for('signin'))
-    else:
-        return render_template('user/profile.html')
+        return redirect(url_for('auth.signin'))
+    user = User.query_filter_by(email=session['email']).first()
+    if username == user.username:
+        user = User.query_filter_by(email=session['email']).first()
+        username = user.username
+        return render_template('user/profile.html', username=username)
+    return render_template('user/profile.html')
 
 @mod_auth.route('/create', methods=['GET', 'POST'])
 def article_create():
@@ -51,7 +49,7 @@ def signup():
     form = SignupForm()
 
     if 'email' is session:
-        return redirect(url_for('profile'))
+        return redirect(url_for('auth.profile'))
     
     if request.method == 'POST':
         if form.validate() == False:
@@ -62,11 +60,13 @@ def signup():
             db.session.commit()
 
             session['email'] = new_user.email
-            return redirect(url_for('profile'))
+            user = User.query.filter_by(email=session['email']).first()
+            username = user.username
+            return "SUCCESS"
+            #return redirect(url_for('auth.profile'), username=username)
         
     elif request.method == 'GET':
         return render_template("authentication/signup.html", form=form)
-
 
 @mod_auth.route('/signin/', methods=['GET', 'POST'])
 def signin():

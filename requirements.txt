@@ -14,3 +14,4 @@ itsdangerous==0.24
 pytz==2015.4
 six==1.9.0
 wsgiref==0.1.2
+webhelpers

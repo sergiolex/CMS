@@ -1,7 +1,7 @@
 from flask.ext.wtf import Form # , RecaptchaField
 from wtforms import TextField, PasswordField, SubmitField # BooleanField
 from wtforms import TextAreaField, HiddenField
-from wtforms.validators import Required, Email, EqualTo
+from wtforms.validators import Required, Email, EqualTo, Length, Regexp
 from models import db, User
 
 strip_filter = lambda x: x.strip() if x else None
@@ -17,11 +17,11 @@ class ArticleUpdateForm(Form):
     id = HiddenField()
 
 class SignupForm(Form):
-    username = TextField('Username', 
-            [Required(message='Please enter an username.')])
+    username = TextField('Username', [Length(min=6, max=25), Regexp(r'^[\w]+$'),
+            Required(message='Please enter an username.')])
     email    = TextField('Email Address', [Email(),
                 Required(message='Please enter your email address.')])
-    password = PasswordField('Password', [
+    password = PasswordField('Password', [Length(min=6, max=25),
                 Required(message='Please enter a password.')])
     submit   = SubmitField("Create account")
 
