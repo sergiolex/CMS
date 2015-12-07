@@ -6,15 +6,61 @@ from flask import (
     g,
     session,
     redirect,
-    url_for
+    url_for,
+    jsonify
 )
 from werkzeug import check_password_hash, generate_password_hash
+from flask.ext.httpauth import HTTPBasicAuth
 
 from app import db
 from app.authentication.forms import LoginForm, SignupForm, ArticleCreateForm
 from app.authentication.models import User, Article
 
 mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
+auth     = HTTPBasicAuth()
+
+@auth.verify_password
+def verify_password(username_or_token, password):
+    user = User.verify_auth_token(username_or_token)
+    if not user:
+        user = User.query.filter_by(username=username_or_token).first()
+        if not user or not user.verify_password(password):
+            return False
+    g.user = user
+    return True
+
+@mod_auth.route('/api/users', methods=['POST'])
+def new_user():
+    username = request.json.get('username')
+    password = request.json.get('password')
+    if username is None or password is None:
+        abort(400)
+    if User.query.filter_by(username=username).first() is not None:
+        abort(400)
+    user = User(username=username)
+    user.hash_password(password)
+    db.session.add(user)
+    db.session.commit()
+    return (jsonify({'username': user.username}), 201, {'Location': url_for('get_user', id=user.id, _external=True)})
+
+@mod_auth.route('/api/users/<int:id>')
+def get_user(id):
+    user = User.query,get(id)
+    if not user:
+        abort(400)
+    return jsonify({'username': user.username})
+
+@mod_auth.route('/api/token')
+@auth.login_required
+def get_auth_token():
+    token = g.user.generate_auth_token(600)
+    return jsonify({'token' : token.decode('ascii'), 'duration' : 600})
+
+@mod_auth.route('/api/resource')
+@auth.login_required
+def get_resource():
+    return jsonify({'data': 'Hello, %s' % g.user.username})
+
 
 @mod_auth.route('/profile/<username>')
 def profile(username):

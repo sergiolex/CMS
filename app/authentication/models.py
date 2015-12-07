@@ -4,6 +4,9 @@ import datetime
 
 from webhelpers.date import time_ago_in_words
 from webhelpers.text import urlify
+from flask import jsonify
+from itsdangerous import (TimedJSONWebSignatureSerializer
+                                  as Serializer, BadSignature, SignatureExpired)
 
 class User(db.Model):
 
@@ -29,8 +32,24 @@ class User(db.Model):
     def set_password(self, password):
         self.pwdhash = generate_password_hash(password)
 
-    def check_password(self, password):
+    def verify_password(self, password):
         return check_password_hash(self.pwdhash, password)
+
+    def generate_auth_token(self, expiration=600):
+        s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
+        return s.dumps({'id': self.id})
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except SignatureExpired:
+            return None         #Expired token
+        except BadSignature:
+            return None         #Invalid token
+        user =  User.query.get(data['id'])
+        return user
 
 class Article(db.Model):
     __tablename__ = 'articles'
