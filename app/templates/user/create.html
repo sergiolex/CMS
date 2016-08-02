@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h2>Create Article</h2>
+
+
+    <form action="?{{ request.query_string }}" method=post>
+    {{ form.hidden_tag() }}
+
+    {{ form.title.label }}
+    {{ form.title }}
+
+    {{ form.body.label }}
+    {{ form.body }}
+
+    {{ form.category.label }}
+    {{ form.category }}<br/>
+
+    {{ form.user_name }}
+
+   <input id="submit" name="submit" class="btn btn-inverse" type="submit" value="Create article">
+  </form>
+{% endblock %}
